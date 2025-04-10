@@ -4,6 +4,10 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Advertiser\OrderController;
 
 class LoginController extends Controller
 {
@@ -37,4 +41,15 @@ class LoginController extends Controller
         $this->middleware('guest')->except('logout');
         $this->middleware('auth')->only('logout');
     }
+
+    public function authenticated(Request $request, $user){
+        $user = Auth::login($user);
+        return redirect()->route('advertiser.dashboard');
+    }
 }
+
+
+
+// <!-- <div>
+//                 <a href="{{ route('advertiser.marketplace') }}">MarketPlace</a> 
+//             </div> -->
