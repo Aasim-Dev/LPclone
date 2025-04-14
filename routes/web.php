@@ -5,7 +5,9 @@ use App\Http\Controllers\Advertiser\OrderController;
 use App\Http\Controllers\Advertiser\WalletController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Advertiser\MarketplaceController;
 
+//Please always do the php artisan optimize after changing the routes
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -33,3 +35,7 @@ Route::post('/wallet/paypal', [WalletController::class, 'handlePayPalPayment'])-
 Route::get('/wallet/paypal/success', [WalletController::class, 'handlePayPalSuccess'])->name('wallet.paypal.success');
 Route::get('/wallet/paypal/cancel', [WalletController::class, 'handlePayPalCancel'])->name('wallet.paypal.cancel');
 Route::post('/wallet/add-funds', [WalletController::class, 'addFunds'])->name('wallet.addFunds');
+
+//MarketPlace Routes 
+Route::get('/marketplace', [MarketplaceController::class, 'index'])->name('marketplace.list');
+Route::get('/marketplace/data', [MarketplaceController::class, 'getData'])->name('marketplace.data');

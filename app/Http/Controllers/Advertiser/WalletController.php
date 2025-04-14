@@ -21,10 +21,9 @@ class WalletController extends Controller
                 ->value('balance');
 
             // If user has no transactions yet, balance might be null, so default to 0
-            $totalBalance = $totalBalance ?? 0;
-
-            return view('advertiser.dashboard', compact('user', 'totalBalance'));
+            $totalBalance = $totalBalance ?? 0; 
         }
+        return view('advertiser.dashboard', compact('user', 'totalBalance'));
     }
     public function addFunds(Request $request){
         $request->validate([
