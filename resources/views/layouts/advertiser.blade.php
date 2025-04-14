@@ -233,7 +233,7 @@
 
         <!-- Footer -->
         <footer class="footer mt-auto">
-            &copy; {{ date('Y') }} Admin Panel. All Rights Reserved.
+            &copy; {{ date('Y') }} 
         </footer>
     </div>
 
