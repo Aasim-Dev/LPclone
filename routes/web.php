@@ -6,6 +6,7 @@ use App\Http\Controllers\Advertiser\WalletController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Advertiser\MarketplaceController;
+use App\Http\Controllers\Advertiser\CartController;
 
 //Please always do the php artisan optimize after changing the routes
 /*
@@ -21,6 +22,12 @@ use App\Http\Controllers\Advertiser\MarketplaceController;
 
 Route::get('/', function () {
     return view('welcome');
+});
+
+Route::middleware('auth:sanctum')->group(function (){
+    Route::get('/cart', [CartController::class, 'index'])->name('cart.items');
+    Route::post('/cart/add', [CartController::class, 'addCart'])->name('cart.add');
+    //Route::delete('/cart/remove', [CartController::class, 'destroy'])->name('cart.destroy');
 });
 
 Auth::routes();
@@ -39,3 +46,7 @@ Route::post('/wallet/add-funds', [WalletController::class, 'addFunds'])->name('w
 //MarketPlace Routes 
 Route::get('/marketplace', [MarketplaceController::class, 'index'])->name('marketplace.list');
 Route::get('/marketplace/data', [MarketplaceController::class, 'getData'])->name('marketplace.data');
+
+//CartFunctions Routes
+Route::get('/getcart', [CartController::class, 'getCartWebsites'])->name('get.cart');
+Route::get('/cart/count', [CartController::class, 'cartCount'])->name('cart.count');

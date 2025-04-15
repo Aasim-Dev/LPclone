@@ -1,0 +1,110 @@
+<?php
+
+namespace App\Http\Controllers\Advertiser;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use App\Models\Wallet;
+use App\Models\User;
+use App\Models\Cart;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
+
+class CartController extends Controller
+{
+    public function index(){
+        $user = auth()->user();
+        $wallet = Wallet::where('status', 'COMPLETED')->where('user_id', $user->id);
+        // Calculate the total balance = all credits - all debits
+        if($wallet){
+            $totalBalance = Wallet::where('user_id', $user->id)
+                ->selectRaw("SUM(CASE WHEN credit_debit = 'credit' THEN amount ELSE 0 END) - SUM(CASE WHEN credit_debit = 'debit' THEN amount ELSE 0 END) as balance")
+                ->value('balance');
+
+            // If user has no transactions yet, balance might be null, so default to 0
+            $totalBalance = $totalBalance ?? 0; 
+        }
+        $users = Auth::user();
+        $cartItems = Cart::where('user_id', $users->id)->get();
+        $cartIds = Cart::where('user_id', $users->id)->pluck('website_id')->toArray();
+        return view('advertiser.cart.items', compact('totalBalance', 'cartItems', 'users', 'cartIds'));
+    }
+
+    public function addCart(Request $request){
+        $request->validate([
+            'website_id' => 'required|integer',
+        ]);
+
+        $user = Auth::user();
+
+        //Check if already in cart
+        $existingCart = Cart::where('user_id', $user->id)
+                            ->where('website_id', $request->website_id)
+                            ->first();
+
+        if ($existingCart) {
+            $existingCart->delete();
+            //Call external API to remove
+            Http::withHeaders([
+                'Authorization' => 'Bearer 1SeaFvgwn6RoKKpdL2j2BEAxjwc2ze',
+            ])->post('https://lp-latest.elsnerdev.com/api/cart/store', [
+                'website_id' => $request->website_id,
+                'action' => 'remove',
+            ]);
+
+            return response()->json([
+                'status' => 'removed',
+                'message' => 'Website removed from cart',
+            ]);
+        }
+
+        //Add to external cart API
+        $apiResponse = Http::withHeaders([
+            'Authorization' => 'Bearer 1SeaFvgwn6RoKKpdL2j2BEAxjwc2ze',
+        ])->post('https://lp-latest.elsnerdev.com/api/cart/store', [
+            'website_id' => $request->website_id,
+            'action' => 'add',
+        ]);
+
+        if ($apiResponse->failed()) {
+            return response()->json(['message' => 'Failed to sync with external API'], 500);
+        }
+
+        $cartIdApi = $apiResponse->json();
+        $cartId = $cartIdApi['cart_id'][0] ?? null;
+        //dd($cartId);
+        $cart = Cart::create([
+            'user_id' => $user->id,
+            'website_id' => $request->website_id,
+            'host_url' => $request->host_url,
+            'da' => $request->da,
+            'tat' => $request->tat,
+            'semrush' => $request->semrush,
+            'guest_post_price' => $request->guest_post_price,
+            'linkinsertion_price' => $request->linkinsertion_price,
+            'response_cart_id' => $cartId,
+            'status' => 'cart',
+        ]);
+
+        return response()->json([
+            'status' => 'added',
+            'message' => 'Website added to cart',
+            'cart_id' => $cart->id,
+            'response_cart_id' => $cartId,
+        ]);
+    }
+
+    public function cartCount(){
+        $user = Auth::user();
+        $count = Cart::where('user_id', $user->id)->count();
+        return response()->json(['count' => $count]);
+    }  
+
+    public function getCartWebsites() {
+        $user = Auth::user();
+        $cartIds = Cart::where('user_id', $user->id)->pluck('website_id')->toArray();
+        return response()->json(['cart' => $cartIds]);
+    }
+    
+}

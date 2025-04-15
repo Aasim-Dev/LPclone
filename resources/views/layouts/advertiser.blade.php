@@ -11,7 +11,7 @@
     <style>
         @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css');
          body {
-            background-color:rgb(15, 24, 34);
+            background-color: #ffffff;
          }
         .top-navbar {
             display: flex;
@@ -206,7 +206,11 @@
 
             <div class="navbar-right">
                 <div class="icon-button">
-                    <i class="fas fa-shopping-cart"></i>
+                    <a href="{{route('cart.items')}}"><i class="fas fa-shopping-cart">Cart
+                    <span id="cart-count" class="badge bg-danger position-absolute top-0 start-100 translate-middle rounded-pill">
+                        {{App\Models\Cart::where('user_id', Auth::user()->id)->count()}}
+                    </span>
+                    </i></a>
                 </div>
                 <div class="profile-dropdown" id="profileDropdown">
                     <div class="profile-button" >

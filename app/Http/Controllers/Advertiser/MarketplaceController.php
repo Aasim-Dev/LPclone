@@ -75,16 +75,12 @@ class MarketplaceController extends Controller
         $maxSemrushFilter = $request->input('max_semrush_filter');
         $minDr = $request->input('min_dr');
         $maxDr = $request->input('max_dr');
-        $tatFilter = $request->input('tat_filter', []);
+        $tatFilter = $request->input('tat_filter');
         $minAuthorityFilter = $request->input('min_authority_filter');
         $maxAuthorityFilter = $request->input('max_authority_filter');
         $linkTypeFilter = $request->input('link_type_filter');
 
         //dd($request->all());
-        
-        if(is_array($tatFilter)){
-            $tatFilter = implode(',', $tatFilter);
-        }
         if(is_array($categories)){
             $categories = implode(',', $categories);
         }
