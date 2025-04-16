@@ -20,8 +20,8 @@ return new class extends Migration
             $table->integer('da');
             $table->string('tat');
             $table->integer('semrush');
-            $table->decimal('guest_post_price', 10, 2);
-            $table->decimal('linkinsertion_price', 10, 2);
+            $table->decimal('guest_post_price', 10, 2)->nullable();
+            $table->decimal('linkinsertion_price', 10, 2)->nullable();
             $table->enum('status', ['wishilist', 'cart'])->default('cart');
             $table->unsignedBigInteger('response_cart_id')->nullable();
             $table->timestamps();

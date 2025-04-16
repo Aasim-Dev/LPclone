@@ -27,8 +27,57 @@ class CartController extends Controller
         }
         $users = Auth::user();
         $cartItems = Cart::where('user_id', $users->id)->get();
-        $cartIds = Cart::where('user_id', $users->id)->pluck('website_id')->toArray();
-        return view('advertiser.cart.items', compact('totalBalance', 'cartItems', 'users', 'cartIds'));
+        $cartIds = Cart::where('user_id', $users->id)->where('status', 'cart')->pluck('website_id')->toArray();
+        if($cartItems->isEmpty()){
+            return view('advertiser.marketplace.list', compact('totalBalance', 'users'))->with('message', 'No items in cart');
+        }else{
+            return view('advertiser.cart.items', compact('totalBalance', 'cartItems', 'users', 'cartIds'));
+        }
+    }
+
+    public function wishlistShow(Request $request){
+        $user = auth()->user();
+        $wallet = Wallet::where('status', 'COMPLETED')->where('user_id', $user->id);
+        // Calculate the total balance = all credits - all debits
+        if($wallet){
+            $totalBalance = Wallet::where('user_id', $user->id)
+                ->selectRaw("SUM(CASE WHEN credit_debit = 'credit' THEN amount ELSE 0 END) - SUM(CASE WHEN credit_debit = 'debit' THEN amount ELSE 0 END) as balance")
+                ->value('balance');
+
+            // If user has no transactions yet, balance might be null, so default to 0
+            $totalBalance = $totalBalance ?? 0; 
+        }
+        $cartItems = Cart::where('user_id', $user->id)->get();
+        $cartIds = Cart::where('user_id', $user->id)->where('status', 'wishlist')->pluck('website_id')->toArray();
+        if($cartItems->isEmpty()){
+            return view('advertiser.marketplace.list' , compact('totalBalance', 'user'))->with('message', 'No items in cart');
+        }else{
+            return view('advertiser.cart.wishlist', compact('totalBalance', 'cartItems', 'cartIds'));
+        }
+    }
+
+    public function destroy(Request $request){
+        $request->validate([
+            'website_id' => ['required', 'integer']
+        ]);
+        $user = Auth::user();
+        $cart = Cart::where('user_id', $user->id)->where('website_id', $request->website_id)->first();
+        if ($cart) {
+            $cart->delete();
+            //Call external API to remove
+            Http::withHeaders([
+                'Authorization' => 'Bearer 1SeaFvgwn6RoKKpdL2j2BEAxjwc2ze',
+            ])->post('https://lp-latest.elsnerdev.com/api/cart/store', [
+                'website_id' => $request->website_id,
+                'action' => 'remove',
+            ]);
+
+            return response()->json([
+                'status' => 'removed',
+                'message' => 'Website removed from cart',
+            ]);
+        }
+        return view('advertiser.marketplace.list')->with('message', 'No items in cart');
     }
 
     public function addCart(Request $request){

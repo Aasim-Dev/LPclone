@@ -26,8 +26,9 @@ Route::get('/', function () {
 
 Route::middleware('auth:sanctum')->group(function (){
     Route::get('/cart', [CartController::class, 'index'])->name('cart.items');
+    Route::get('/wishlist', [CartController::class, 'wishlistShow'])->name('wishlist.items');
     Route::post('/cart/add', [CartController::class, 'addCart'])->name('cart.add');
-    //Route::delete('/cart/remove', [CartController::class, 'destroy'])->name('cart.destroy');
+    Route::delete('/cart/remove', [CartController::class, 'destroy'])->name('cart.destroy');
 });
 
 Auth::routes();

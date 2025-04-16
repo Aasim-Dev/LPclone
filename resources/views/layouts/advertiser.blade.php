@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Advertiser Panel - @yield('title')</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     @yield('styles')
@@ -206,7 +207,14 @@
 
             <div class="navbar-right">
                 <div class="icon-button">
-                    <a href="{{route('cart.items')}}"><i class="fas fa-shopping-cart">Cart
+                    <a href="{{route('wishlist.items')}}"><i class="fas fa-heart">
+                    <span id="wishlist-count" class="badge bg-danger position-absolute top-0 start-100 translate-middle rounded-pill">
+                        0
+                    </span>
+                    </i></a>
+                </div>
+                <div class="icon-button">
+                    <a href="{{route('cart.items')}}"><i class="fas fa-shopping-cart">
                     <span id="cart-count" class="badge bg-danger position-absolute top-0 start-100 translate-middle rounded-pill">
                         {{App\Models\Cart::where('user_id', Auth::user()->id)->count()}}
                     </span>
@@ -242,8 +250,21 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     @yield('scripts')
+            @if(Session::has('message'))
+                <script>
+                    toastr.options = {
+                        "closeButton": true,
+                        "progressBar": true,
+                        "positionClass": "toast-top-right",
+                        "timeOut": "5000"
+                    };
+                    toastr.warning("{{ Session::get('message') }}");
+                </script>
+            @endif
     <script>
+        
         $(document).ready(function(){
             $('#profileDropdown').on('click', function() {
                 $('#dropdownMenu').toggleClass('active');

@@ -3,6 +3,7 @@
 @section('title', 'MarketPlace')
 
 @section('styles')
+<link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet"/>
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <style>
@@ -233,7 +234,7 @@
             <table id="myTable">
                 <thead>
                     <tr>
-                        <th>Created At</th>
+
                         <th>Host URL</th>
                         <th class="da">DA</th>
                         <th>Ahref</th>
@@ -255,18 +256,19 @@
 
 @section('scripts')
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-
-<!-- Load Select2 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
-<!-- Load jQuery Validation -->
 <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.3/dist/jquery.validate.min.js"></script>
-
-<!-- Load DataTables -->
 <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
     <script>
         $(document).ready(function(){
+            toastr.options = {
+                "closeButton": true,
+                "progressBar": true,
+                "positionClass": "toast-bottom-right",
+                "timeOut": "3000"
+            };
             updateCartCount();
             $('#myTable').DataTable({
                 serverSide: true,
@@ -294,7 +296,6 @@
                     }
                 },
                 columns: [
-                    { data: 'created_at', name: 'created_at' },
                     { data: 'host_url', name: 'host_url' },
                     { data: 'da', name: 'da' },
                     { data: 'ahref', name: 'ahref' },
@@ -323,7 +324,17 @@
                     {
                         data: 'website_id',
                         render: function(data, type, row) {
-                            return `<button class="add-to-cart"
+                            return `<button class="Wishlist"
+                                        data-id="${row.website_id}"
+                                        data-host_url="${row.host_url}"
+                                        data-da="${row.da}"
+                                        data-tat="${row.tat}"
+                                        data-semrush="${row.semrush}"
+                                        data-guest_post_price="${row.guest_post_price}"
+                                        data-linkinsertion_price="${row.linkinsertion_price}">
+                                        Wishlist
+                                    </button>
+                                    <button class="add-to-cart"
                                         data-id="${row.website_id}"
                                         data-host_url="${row.host_url}"
                                         data-da="${row.da}"
@@ -428,48 +439,15 @@
                             button.text("Add to Cart").css("background-color", "#2ecc71");
                         }
                         updateCartCount();
-                        alert(response.message);
+                        toastr.success(response.message);
                         
                     },
                     error: function (xhr) {
                         console.log(xhr.responseJSON);
-                        alert("Something went wrong!");
+                        toastr.error("Something went wrong!");
                     }
                 });
             });
-
-            // $(document).on('click', '.add-to-cart', function () {
-            //     const websiteId = $(this).data('website_id');
-
-            //     const payload = {
-            //         website_id: websiteId,
-            //         action: 'remove'
-            //     };
-
-            //     fetch('https://lp-latest.elsnerdev.com/api/cart/store', {
-            //         method: 'POST',
-            //         headers: {
-            //             'Content-Type': 'application/json',
-            //             'Accept': 'application/json',
-            //             'Authorization': 'Bearer PKvUIEnrIMSViaD3BbJ1qJleBMMRY1' // replace with your actual token
-            //         },
-            //         body: JSON.stringify(payload)
-            //     })
-            //     .then(response => {
-            //         if (!response.ok) throw new Error('Network response was not ok');
-            //         return response.json();
-            //     })
-            //     .then(result => {
-            //         alert('Item added to cart!');
-            //         console.log('Cart response:', result);
-            //         $(this).text('Remove from cart').removeClass('add-to-cart').addClass('remove-from-cart');
-            //         addToLocalCart(websiteId);
-            //     })
-            //     .catch(err => {
-            //         alert('Failed to add to cart.');
-            //         console.error(err);
-            //     });
-            // });
         });
     </script>
 @endsection
