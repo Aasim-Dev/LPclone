@@ -4,6 +4,7 @@
 
 @section('styles')
     <!-- Bootstrap 5 CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet"/>
     <style>
@@ -89,37 +90,38 @@
         @if($item->guest_post_price > 0 && $item->linkinsertion_price > 0)
         <div class="mb-3 backlink-options">
             <label>
-                <input type="radio" id="provide_{{$item->id}}" class="provide" name="backlink_{{ $item->id }}" checked>
+                <input type="radio" id="provide_{{$item->id}}" class="provide" name="backlink_{{ $item->id }}">
                 Provide Content
             </label>
             <label>
-                <input type="radio" name="backlink_{{ $item->id }}">
+                <input type="radio" id="hire_{{$item->id}}" name="backlink_{{ $item->id }}">
                 Hire Content Writer
             </label>
             <label>
-                <input type="radio" name="backlink_{{ $item->id }}">
+                <input type="radio" id="linkinsertion_{{ $item->id }}" name="backlink_{{ $item->id }}">
                 Link Insertion
             </label>
         </div>
         @elseif($item->guest_post_price > 0)
         <div class="mb-3 backlink-options">
             <label>
-                <input type="radio" id="provide_{{$item->id}}" class="provide" name="backlink_{{ $item->id }}" checked>
+                <input type="radio" id="provide_{{$item->id}}" class="provide" name="backlink_{{ $item->id }}">
                 Provide Content
             </label>
             <label>
-                <input type="radio" name="backlink_{{ $item->id }}">
+                <input type="radio" id="hire_{{$item->id}}" name="backlink_{{ $item->id }}">
                 Hire Content Writer
             </label>
         </div>
         @elseif($item->linkinsertion_price > 0)
         <div class="mb-3 backlink-options">
             <label>
-                <input type="radio" name="backlink_{{ $item->id }}">
+                <input type="radio" id="linkinsertion_{{ $item->id }}" name="backlink_{{ $item->id }}">
                 Link Insertion
             </label>
         </div>
         @endif
+        <!-- Modal for the Provide Content -->
         <div class="modal fade" id="provideModal_{{$item->id}}" tabindex="-1" aria-labelledby="provideModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -128,16 +130,113 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <form id="provideContentForm_{{$item->id}}" method="" action="" >
+                        <form id="provideContentForm_{{$item->id}}" data-website-id="{{ $item->website_id }}" enctype="multipart/form-data">
+                        
                             <div class="mb-3" >
+                                <input type="hidden" name="website_id" value="{{$item->website_id}}" id="website_id">
                                 <label for="language" class="form-label">Language</label>
-                                <input type="text" class="form-control" id="language" placeholder="English" readonly>
+                                <input type="text" class="form-control" id="language" placeholder="English" value="{{ $item->language ?? 'English' }}" readonly>
                                 <label for="attachments" class="form-label">Attachments <span>Note: Docs supported Only</span></label>
-                                <input type="file" class="form-control" name="file" id="attachments_{{$item->id}}" placeholder="Upload your File">
+                                <input type="file" class="form-control" name="attachment" id="attachments_{{$item->id}}" placeholder="Upload your File">
+                                    <p class="mt-2" style="color:green">{{$item->attachment}}</p>
                                 <label for="content" class="form-label">Special Instruction</label>
-                                <textarea class="form-control" id="content_{{$item->id}}" name="content" rows="4"></textarea>
+                                <textarea class="form-control" id="content_{{$item->id}}" name="content" rows="4">{{ $item->special_instruction ?? '' }}</textarea>
                             </div>
-                            <button type="submit" class="btn btn-primary">Submit Content</button>
+                            <button type="submit" id="submit" class="btn btn-primary">Submit Content</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Modal for the Hire Content Writer -->
+        <div class="modal fade" id="hireContentModal_{{$item->id}}" tabindex="-1" aria-labelledby="hireContentModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="hireContentModalLabel">Hire Content Writer</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="hireContentForm_{{$item->id}}" method="POST" action="your-action-url">
+                            <div class="mb-3">
+                                <label for="language" class="form-label">Language</label>
+                                <input type="text" class="form-control" id="language" placeholder="English" readonly><br>
+                                <label for="titlesuggestion" class="form-label">Title Suggestion*</label>
+                                <input type="text" class="form-control" id="titlesuggestion_{{$item->id}}" name="title_suggestion" placeholder="Enter title suggestion"><br>
+                                <label for="keywords" class="form-label">Keywords*</label>
+                                <input type="text" class="form-control" id="keywords_{{$item->id}}" name="keywords" placeholder="Enter keywords: Seperated by Comma"><br>
+                                <label for="anchortext" class="form-label">Anchor Text*</label>
+                                <input type="text" class="form-control" id="anchortext_{{$item->id}}" name="anchor_text" placeholder="Enter anchor text"><br>
+                                <label for="wordcount">Word Count*</label>
+                                <select class="form-control" id="wordcount_{{$item->id}}" name="wordcount">
+                                    <option value="">select word count</option>
+                                    <option value="500">500</option>
+                                    <option value="1000">1000</option>
+                                    <option value="1500">1500</option>
+                                    <option value="2000">2000</option>
+                                    <option value="2500">2500</option>
+                                </select><br>
+                                <label for="category" class="form-label">Category*</label>
+                                <select class="form-control" id="category_{{$item->id}}" name="category" multiple>
+                                    <option value="">All Categories</option>
+                                    <option value="Health & Fitness">Health & Fitness</option>
+                                    <option value="Technology">Technology</option>
+                                    <option value="Agriculture">Agriculture</option>
+                                    <option value="Arts & Entertainment">Arts & Entertainment</option>
+                                    <option value="Beauty">Beauty</option>
+                                    <option value="Blogging">Blogging</option>
+                                    <option value="Buisness">Buisness</option>
+                                    <option value="Career & Employment">Career & Employment</option>
+                                    <option value="Ecommerce">Ecommerce</option>
+                                    <option value="Web Development">Web Development</option>
+                                </select><br>
+                                <label for="reference" class="form-label">Reference Link*</label>
+                                <input type="text" class="form-control" id="reference_{{$item->id}}" name="reference" placeholder="Enter reference link"><br>
+                                <label for="landingpage" class="form-label">Landing Page URL*</label>
+                                <input type="text" class="form-control" id="landingpage_{{$item->id}}" name="landingpage" placeholder="Enter landing page URL"><br>
+                                <label for="briefnote">Breif Note</label>
+                                <textarea class="form-control" name="brief" id="brief_{{$item->id}}" placeholder="Enter Notes" ></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Hire Writer</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LinkInsertion Modal -->
+        <div class="modal fade" id="linkInsertionModal_{{$item->id}}" tabindex="-1" aria-labelledby="linkInsertionModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="linkInsertionModalLabel">
+                            Backlink 2: Link Insertion |
+                            <span>${{ $item->linkinsertion_price }}</span>
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="linkInsertionForm_{{$item->id}}" data-website-id="{{ $item->website_id }}">
+                            <input type="hidden" name="website_id" value="{{ $item->website_id }}">
+                            
+                            <div class="mb-3">
+                                <label for="existing_post_url_{{$item->id}}" class="form-label">Existing Post URL</label>
+                                <input type="url" class="form-control" id="existing_post_url_{{$item->id}}" name="existing_post_url" value="{{$item->existing_post_url}}" placeholder="https://example.com/post-url">
+                                    
+                                <label for="landing_url_{{$item->id}}" class="form-label mt-3">Landing Page URL</label>
+                                <input type="url" class="form-control" id="target_url_{{$item->id}}" name="target_url" value="{{$item->target_url}}" placeholder="https://your-site.com">
+
+                                <label for="anchor_text_{{$item->id}}" class="form-label mt-3">Anchor Text</label>
+                                <input type="text" class="form-control" id="anchor_text_{{$item->id}}" name="anchor_text" value="{{$item->anchor_text}}" placeholder="Anchor Text">
+
+                                <label for="language_{{$item->id}}" class="form-label mt-3">Language</label>
+                                <input type="text" class="form-control" id="language_{{$item->id}}" name="language" value="{{ $item->language ?? 'English' }}" readonly>
+
+                                <label for="note_{{$item->id}}" class="form-label mt-3">Special Note</label>
+                                <textarea class="form-control" id="note_{{$item->id}}" name="note" rows="3" value="{{$item->special_note}}" placeholder="Any special instructions...">{{ $item->special_note ?? '' }}</textarea>
+                            </div>
+
+                            <button type="submit" id="submitLinkInsertion" class="btn btn-primary">Submit Link Insertion</button>
                         </form>
                     </div>
                 </div>
@@ -174,6 +273,11 @@
     <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
         <script>
             $(document).ready(function(){
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    }
+                });
                 $.validator.addMethod("containsMinNumber", function(value, element) {
                     const numbers = value.match(/\d+/g); // extract all numbers
                     if (!numbers) return false; // no numbers at all
@@ -187,15 +291,28 @@
                     pagelength: 25,
                     lengthMenu: [25, 50, 100],
                 });
-                $(document).on('change', `input[name^="backlink_"]`, function () {
+                
+                $(document).on('change', `input[name^="backlink_"]`, function() {
                     const itemId = $(this).attr('name').split('_')[1];
                     const selected = $(`input[name="backlink_${itemId}"]:checked`).attr('id');
 
                     if (selected === `provide_${itemId}`) {
                         $(`#provideModal_${itemId}`).modal('show');
-                    } else {
+                    }else if(selected === `hire_${itemId}`) {
+                        $(`#hireContentModal_${itemId}`).modal('show');
+                    }else if(selected === `linkinsertion_${itemId}`){
+                        $(`#linkInsertionModal_${itemId}`).modal('show');
+                    } else{
                         $(`#provideModal_${itemId}`).modal('hide');
+                        $(`#hireContentModal_${itemId}`).modal('hide');
+                        $(`#linkInsertionModal_${itemId}`).modal('hide');
                     }
+                });
+                $('#category_{{$item->id}}').select2({
+                    placeholder: "Select categories",
+                    allowClear: true,
+                    tags: true,
+                    tokenSeparators: [',']
                 });
                 $(document).on('click', '#remove', function() {
                     var cartId = $(this).data('id');
@@ -217,9 +334,10 @@
                         }
                     });
                 });
-                $('form[id^="provideContentForm_"]').each(function () {
+                $('form[id^="provideContentForm_"]').each(function() {
                     const formId = $(this).attr('id');
                     const itemId = formId.split('_')[1];
+                    
                     $(this)[0].reset();
                     $(this).validate({
                         rules: {
@@ -228,14 +346,88 @@
                                 extension: "docx|doc",
                             },
                             content: {
-                                required: true,
+                                //required: true,
                                 maxlength: 255,
-                                minlength: 10,
-                                containsMinNumber: true,
+                                //minlength: 10,
+                                //containsMinNumber: true,
                             },
                         },
                         submitHandler: function (form) {
                             form.submit();
+                        }
+                    });
+                });
+
+                $(document).on('submit', 'form[id^="provideContentForm_"]', function(e) {
+                    e.preventDefault();
+                    const form = this;
+                    const formId = $(form).attr('id');
+                    const itemId = formId.split('_')[1];
+                    const websiteId = $(form).data('website-id');  // make sure this is present in HTML
+                    const specialInstruction = 'ABCDE';
+                    const fileInput = $('#attachments_' + itemId)[0].files[0];
+
+                    const formData = new FormData();
+                    formData.append('_token', '{{ csrf_token() }}');
+                    formData.append('type', 'provide_content');
+                    formData.append('language', 'English');
+                    formData.append('special_instruction', specialInstruction);
+                    formData.append('website_id', websiteId);
+                    if (fileInput) {
+                        formData.append('attachment', fileInput);
+                    }
+
+                    $.ajax({
+                        url: "{{ route('cart.content') }}",
+                        method: 'POST',
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function (res) {
+                            alert('Added to cart successfully!');
+                            $('#provideModal_' + itemId).modal('hide');
+                        },
+                        error: function (err) {
+                            alert('Error adding to cart');
+                            console.log(err);
+                        }
+                    });
+                });
+
+                $(document).on('submit', 'form[id^="linkInsertionForm_"]', function(e){
+                    e.preventDefault();
+                    const form = this;
+                    const formId = $(form).attr('id');
+                    const itemId = formId.split('_')[1];
+                    const websiteId = $(form).data('website-id');
+                    const existingPostUrl = $('#existing_post_url_' + itemId).val();
+                    const targetUrl = $('#target_url_' + itemId).val();
+                    const anchorText = $('#anchor_text_' + itemId).val();
+                    const language = $('#language_' + itemId).val();
+                    const specialNote = $('#note_' + itemId).val();
+                    const formData = new FormData();
+                    formData.append('_token', '{{ csrf_token() }}');
+                    formData.append('type', 'link_insertion');
+                    formData.append('website_id', websiteId);
+                    formData.append('existing_post_url', existingPosturl);
+                    formData.append('target_url', targetUrl);
+                    formData.append('anchor_text', anchorText);
+                    formData.append('language', language);
+                    formData.append('special_note', specialNote);
+                    
+                    $.ajax({
+                        url: "{{route('cart.link')}}",
+                        type: 'POST',
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function (res) {
+                            alert('Added to cart successfully!');
+                            $('#linkInsertionModal_' + itemId).modal('hide');
+                        },
+                        error: function (err) {
+                            alert('Error adding to cart');
+                            console.log(err);
                         }
                     });
                 });

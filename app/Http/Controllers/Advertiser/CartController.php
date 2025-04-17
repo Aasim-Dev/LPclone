@@ -144,6 +144,108 @@ class CartController extends Controller
         ]);
     }
 
+    public function storeProvideContent(Request $request){
+        $request->validate([
+            'type' => 'string|in:provide_content',
+            'language' => '|string',
+            'special_instruction' => 'string',
+            'website_id' => 'integer',
+            'attachment' => 'file|mimes:doc,docx,pdf|max:2048'
+        ]);
+
+        $fileName = 'sample.docx'; 
+        $filePath = public_path($fileName);
+        //dd($filePath);
+        if (!file_exists($filePath)) {
+            return response()->json(['error' => 'File not found on server'], 404);
+        }
+    
+        $response = Http::withToken('1SeaFvgwn6RoKKpdL2j2BEAxjwc2ze')
+            ->attach(
+                'attachment',
+                file_get_contents($filePath),
+                $fileName
+            )
+            ->post('https://lp-latest.elsnerdev.com/api/cart/gp-order-info', [
+                'type' => $request->type,
+                'language' => $request->language,
+                'special_instruction' => $request->special_instruction,
+                'website_id' => $request->website_id,
+            ]);
+    
+        $cart = Cart::where('user_id', $request->user()->id)
+                    ->where('website_id', $request->website_id)
+                    ->first();
+
+        if($cart){
+            Cart::where('user_id', $request->user()->id)
+                ->where('website_id', $request->website_id)
+                ->update([
+                            'type' => $request->type,
+                            'language' => $request->language,
+                            'special_instruction' => $request->special_instruction,
+                            'attachment' => $fileName,
+                        ]);
+                    
+            return response()->json([
+                'message' => 'Content updated to cart successfully',
+                'cart_id' => $cart->id
+            ]);
+        } else {
+            return response()->json([
+                'message' => 'Cart item not found',
+                'cart_id' => null
+            ], 404);
+        }
+    }
+
+    public function linkInsertion(Request $request){
+        $request->validate([
+            'type' => ['string', 'in:link_insertion'],
+            'language' => ['string'],
+            'existing_post_url' => ['string'],
+            'target_url' => ['string'],
+            'anchor_text' => ['string'],
+            'special_note' => ['string'],
+            'website_id' => ['integer'],
+        ]);
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer 1SeaFvgwn6RoKKpdL2j2BEAxjwc2ze',   
+        ])->post('https://lp-latest.elsnerdev.com/api/cart/li_order_info', [
+            'type' => 'link_insertion',
+            'language' => 'English',
+            'existing_post_url' => 'https://example.com/existing-post',
+            'target_url' => 'https://example.com/target-url',
+            'anchor_text' => 'Click here',
+            'special_note' => 'Please avoid emails or phone numbers.',
+            'website_id' => 123,
+        ]);
+        $cart = Cart::where('user_id', $request->user()->id)
+                    ->where('website_id', $request->website_id)
+                    ->first();
+        if($cart){
+            Cart::where('user_id', $request->user()->id)
+                ->where('website_id', $request->website_id)
+                ->update([
+                    'type' => $request->type,
+                    'language' => $request->language,
+                    'existing_post_url' => $request->existing_post_url,
+                    'target_url' => $request->target_url,
+                    'anchor_text' => $request->anchor_text,
+                    'special_note' => $request->special_note,
+                ]);
+            return response()->json([
+                'message' => 'Content updated to cart successfully',
+                'cart_id' => $cart->id
+            ]);
+        }else {
+            return response()->json([
+                'message' => 'Cart item not found',
+                'cart_id' => null
+            ], 404);
+        }
+    }
+
     public function cartCount(){
         $user = Auth::user();
         $count = Cart::where('user_id', $user->id)->count();
