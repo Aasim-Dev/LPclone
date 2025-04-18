@@ -145,6 +145,7 @@ class CartController extends Controller
     }
 
     public function storeProvideContent(Request $request){
+        
         $request->validate([
             'type' => 'string|in:provide_content',
             'language' => '|string',
@@ -200,40 +201,71 @@ class CartController extends Controller
     }
 
     public function linkInsertion(Request $request){
+        $user = Auth::user();
         $request->validate([
-            'type' => ['string', 'in:link_insertion'],
-            'language' => ['string'],
-            'existing_post_url' => ['string'],
-            'target_url' => ['string'],
-            'anchor_text' => ['string'],
-            'special_note' => ['string'],
+          
             'website_id' => ['integer'],
         ]);
-        $response = Http::withHeaders([
-            'Authorization' => 'Bearer 1SeaFvgwn6RoKKpdL2j2BEAxjwc2ze',   
-        ])->post('https://lp-latest.elsnerdev.com/api/cart/li_order_info', [
+
+        $data = [
             'type' => 'link_insertion',
             'language' => 'English',
             'existing_post_url' => 'https://example.com/existing-post',
             'target_url' => 'https://example.com/target-url',
             'anchor_text' => 'Click here',
             'special_note' => 'Please avoid emails or phone numbers.',
-            'website_id' => 123,
-        ]);
-        $cart = Cart::where('user_id', $request->user()->id)
-                    ->where('website_id', $request->website_id)
-                    ->first();
+            'website_id' => $request->website_id,
+        ];
+
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer 1SeaFvgwn6RoKKpdL2j2BEAxjwc2ze',   
+        ])->post('https://lp-latest.elsnerdev.com/api/cart/li-order-info', $data);
+        $cart = Cart::where('user_id', $request->user()->id)->where('website_id', $request->website_id)->first();
         if($cart){
             Cart::where('user_id', $request->user()->id)
                 ->where('website_id', $request->website_id)
-                ->update([
-                    'type' => $request->type,
-                    'language' => $request->language,
-                    'existing_post_url' => $request->existing_post_url,
-                    'target_url' => $request->target_url,
-                    'anchor_text' => $request->anchor_text,
-                    'special_note' => $request->special_note,
-                ]);
+                ->update($data);
+            return response()->json([
+                'message' => 'Content updated to cart successfully',
+                'cart_id' => $cart->id
+            ]);
+        }else {
+            return response()->json([
+                'message' => 'Cart item not found',
+                'cart_id' => null
+            ], 404);
+        }
+    }
+
+    public function hireContent(Request $request){
+        $request->validate([
+            'website_id' => ['integer'],
+        ]);
+
+        $data = [
+            'type' => 'guest_post',
+            'language' => 'English',
+            'title_suggestion' => 'Sample Title',
+            'keywords' => 'keyword1, keyword2',
+            'anchor_text' => 'click here',
+            'country' => 'USA', 
+            'word_count' => '1000',
+            'category' => 'Technology',
+            'reference_link' => 'https://example.com/reference',
+            'target_url' => 'https://example.com/target-url',
+            'special_note' => 'Please avoid emails or phone numbers.',
+            'website_id' => $request->website_id,
+        ];
+
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer 1SeaFvgwn6RoKKpdL2j2BEAxjwc2ze', 
+        ])->post('https://lp-latest.elsnerdev.com/api/cart/content-gp-order-info', $data);
+
+        $cart = Cart::where('user_id', $request->user()->id)->where('website_id', $request->website_id)->first();
+        if($cart){
+            Cart::where('user_id', $request->user()->id)
+                ->where('website_id', $request->website_id)
+                ->update($data);
             return response()->json([
                 'message' => 'Content updated to cart successfully',
                 'cart_id' => $cart->id

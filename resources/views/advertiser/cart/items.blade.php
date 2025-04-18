@@ -157,28 +157,40 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <form id="hireContentForm_{{$item->id}}" method="POST" action="your-action-url">
+                        <form id="hireContentForm_{{$item->id}}" data-website-id="{{$item->website_id}}">
                             <div class="mb-3">
-                                <label for="language" class="form-label">Language</label>
-                                <input type="text" class="form-control" id="language" placeholder="English" readonly><br>
+                                <label for="language" class="form-label" >Language</label>
+                                <input type="text" class="form-control" id="language" placeholder="English" value="{{$item->language ?? English}}" readonly><br>
                                 <label for="titlesuggestion" class="form-label">Title Suggestion*</label>
-                                <input type="text" class="form-control" id="titlesuggestion_{{$item->id}}" name="title_suggestion" placeholder="Enter title suggestion"><br>
+                                <input type="text" class="form-control" id="title_suggestion_{{$item->id}}" name="title_suggestion" value="{{$item->title_suggestion ?? ''}}" placeholder="Enter title suggestion"><br>
                                 <label for="keywords" class="form-label">Keywords*</label>
-                                <input type="text" class="form-control" id="keywords_{{$item->id}}" name="keywords" placeholder="Enter keywords: Seperated by Comma"><br>
+                                <input type="text" class="form-control" id="keywords_{{$item->id}}" name="keywords" value="{{$item->keywords ?? ''}}" placeholder="Enter keywords: Seperated by Comma"><br>
                                 <label for="anchortext" class="form-label">Anchor Text*</label>
-                                <input type="text" class="form-control" id="anchortext_{{$item->id}}" name="anchor_text" placeholder="Enter anchor text"><br>
+                                <input type="text" class="form-control" id="anchor_text_{{$item->id}}" name="anchor_text"  value="{{$item->anchor_text ?? ''}}" placeholder="Enter anchor text"><br>
+                                <label for="country">Country*</label>
+                                <select name="country" id="country_{{$item->id}}" class="form-control">
+                                    <option value="{{$item->country ?? ''}}">{{$item->country ?? ''}}</option>
+                                    <option value="India">India</option>
+                                    <option value="USA">USA</option>
+                                    <option value="UK">UK</option>
+                                    <option value="Canada">Canada</option>
+                                    <option value="Australia">Australia</option>
+                                    <option value="Dutch">Dutch</option>
+                                    <option value="Vietnam">Vietnam</option>
+                                    <option value="Russia">Russia</option>
+                                </select><br>
                                 <label for="wordcount">Word Count*</label>
                                 <select class="form-control" id="wordcount_{{$item->id}}" name="wordcount">
-                                    <option value="">select word count</option>
-                                    <option value="500">500</option>
-                                    <option value="1000">1000</option>
-                                    <option value="1500">1500</option>
-                                    <option value="2000">2000</option>
-                                    <option value="2500">2500</option>
+                                    <option value="{{$item->word_count ?? ''}}">{{$item->word_count ?? ''}}</option>
+                                    <option value="500 words">500 words</option>
+                                    <option value="1000 words">1000 words</option>
+                                    <option value="1500 words">1500 words</option>
+                                    <option value="2000 words">2000 words</option>
+                                    <option value="2500 words">2500 words</option>
                                 </select><br>
                                 <label for="category" class="form-label">Category*</label>
-                                <select class="form-control" id="category_{{$item->id}}" name="category" multiple>
-                                    <option value="">All Categories</option>
+                                <select class="form-control category" id="category_{{$item->id}}" name="category">
+                                    <option value="{{$item->category ?? ''}}">{{$item->category ?? ''}}</option>
                                     <option value="Health & Fitness">Health & Fitness</option>
                                     <option value="Technology">Technology</option>
                                     <option value="Agriculture">Agriculture</option>
@@ -191,13 +203,13 @@
                                     <option value="Web Development">Web Development</option>
                                 </select><br>
                                 <label for="reference" class="form-label">Reference Link*</label>
-                                <input type="text" class="form-control" id="reference_{{$item->id}}" name="reference" placeholder="Enter reference link"><br>
+                                <input type="text" class="form-control" id="reference_{{$item->id}}" name="reference" value="{{$item->reference_link ?? ''}}" placeholder="Enter reference link"><br>
                                 <label for="landingpage" class="form-label">Landing Page URL*</label>
-                                <input type="text" class="form-control" id="landingpage_{{$item->id}}" name="landingpage" placeholder="Enter landing page URL"><br>
+                                <input type="text" class="form-control" id="target_url_{{$item->id}}" name="target_url" value="{{$item->target_url ?? ''}}" placeholder="Enter landing page URL"><br>
                                 <label for="briefnote">Breif Note</label>
-                                <textarea class="form-control" name="brief" id="brief_{{$item->id}}" placeholder="Enter Notes" ></textarea>
+                                <textarea class="form-control" name="special_note" id="special_note_{{$item->id}}" placeholder="Enter Notes" >{{$item->special_note ?? ''}}</textarea>
                             </div>
-                            <button type="submit" class="btn btn-primary">Hire Writer</button>
+                            <button type="submit" id="submitHire" class="btn btn-primary">Hire Writer</button>
                         </form>
                     </div>
                 </div>
@@ -251,7 +263,7 @@
     @endforeach
 
     <div class="text-end mt-4">
-        <p class="cart-total">Order Total: ${{ $cartItems->sum('guest_post_price') }}</p>
+        <p class="cart-total">Order Total: ${{ $cartItems->sum('guest_post_price')+$cartItems->sum('linkinsertion_price') }}</p>
         <button class="btn btn-primary">Go to Order Summary →</button>
     </div>
 </div>
@@ -283,14 +295,14 @@
                     if (!numbers) return false; // no numbers at all
                     return numbers.some(n => parseInt(n, 10) <= 10); // at least one number >= 10
                 }, "We can Ban your account on sharing personal information.");
-                $("#cartTable").DataTable({
-                    searching: true,
-                    paging: true,
-                    ordering: true,
-                    order: [[2, "desc"]],
-                    pagelength: 25,
-                    lengthMenu: [25, 50, 100],
-                });
+                // $("#cartTable").DataTable({
+                //     searching: true,
+                //     paging: true,
+                //     ordering: true,
+                //     order: [[2, "desc"]],
+                //     pagelength: 25,
+                //     lengthMenu: [25, 50, 100],
+                // });
                 
                 $(document).on('change', `input[name^="backlink_"]`, function() {
                     const itemId = $(this).attr('name').split('_')[1];
@@ -308,12 +320,7 @@
                         $(`#linkInsertionModal_${itemId}`).modal('hide');
                     }
                 });
-                $('#category_{{$item->id}}').select2({
-                    placeholder: "Select categories",
-                    allowClear: true,
-                    tags: true,
-                    tokenSeparators: [',']
-                });
+                
                 $(document).on('click', '#remove', function() {
                     var cartId = $(this).data('id');
                     var websiteId = $(this).data('website_id');
@@ -343,7 +350,7 @@
                         rules: {
                             file: {
                                 required: true,
-                                extension: "docx|doc",
+                                accept: "docx, doc",
                             },
                             content: {
                                 //required: true,
@@ -400,20 +407,11 @@
                     const formId = $(form).attr('id');
                     const itemId = formId.split('_')[1];
                     const websiteId = $(form).data('website-id');
-                    const existingPostUrl = $('#existing_post_url_' + itemId).val();
-                    const targetUrl = $('#target_url_' + itemId).val();
-                    const anchorText = $('#anchor_text_' + itemId).val();
-                    const language = $('#language_' + itemId).val();
-                    const specialNote = $('#note_' + itemId).val();
+
                     const formData = new FormData();
                     formData.append('_token', '{{ csrf_token() }}');
-                    formData.append('type', 'link_insertion');
                     formData.append('website_id', websiteId);
-                    formData.append('existing_post_url', existingPosturl);
-                    formData.append('target_url', targetUrl);
-                    formData.append('anchor_text', anchorText);
-                    formData.append('language', language);
-                    formData.append('special_note', specialNote);
+                    formData.append('type', 'link_insertion');
                     
                     $.ajax({
                         url: "{{route('cart.link')}}",
@@ -429,6 +427,36 @@
                             alert('Error adding to cart');
                             console.log(err);
                         }
+                    });
+                });
+
+                $(document).on('submit', 'form[id^="hireContentForm_"]', function(e){
+                    e.preventDefault();
+                    console.log('Form submission triggered');
+                    const form = this;
+                    const formId = $(form).attr('id');
+                    const itemId = formId.split('_')[1];
+                    const websiteId = $(form).data('website-id');
+
+                    const formData = new FormData();
+                    formData.append('_token', '{{ csrf_token() }}');
+                    formData.append('website_id', websiteId);
+                    formData.append('type', 'guest_post');
+
+                    $.ajax({
+                        url: "{{route('cart.hire')}}",
+                        type: "POST",
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function(res){
+                            alert('Added to cart successfully!');
+                            $('#hireContentModal_' + itemId).modal('hide');
+                        },
+                        error: function(err){
+                            alert('Error adding to cart');
+                            console.log(err);
+                        },
                     });
                 });
             });

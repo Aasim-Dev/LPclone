@@ -31,6 +31,7 @@ Route::middleware('auth:sanctum')->group(function (){
     Route::delete('/cart/remove', [CartController::class, 'destroy'])->name('cart.destroy');
     Route::post('/cart/update', [CartController::class, 'storeProvideContent'])->name('cart.content');
     Route::post('/cart/linkInsertion', [CartController::class, 'linkInsertion'])->name('cart.link');
+    Route::post('/cart/hire', [CartController::class, 'hireContent'])->name('cart.hire');
 });
 
 Auth::routes();
